@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">realbook</string>
+    <string name="welcome"><b>Oi, Bem vindo de volta.</b></string>
+    <string name="login_com_google">Login com Google</string>
 </resources>
