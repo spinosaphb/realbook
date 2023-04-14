@@ -2,4 +2,9 @@
     <string name="app_name">realbook</string>
     <string name="welcome"><b>Oi, Bem vindo de volta.</b></string>
     <string name="login_com_google">Login com Google</string>
+    <string name="profile">Perfil</string>
+    <string name="new_post">Novo post</string>
+    <string name="your_friends">Seus amigos</string>
+    <string name="home">Home</string>
+    <string name="search">Buscar</string>
 </resources>

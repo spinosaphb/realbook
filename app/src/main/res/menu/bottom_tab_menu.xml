@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/home"
+        android:icon="@drawable/home"
+        android:title="@string/home"  />
+    <item
+        android:id="@+id/search"
+        android:icon="@drawable/search"
+        android:title="@string/search" />
+    <item
+        android:id="@+id/new_post"
+        android:icon="@drawable/add_new_post_square"
+        android:title="@string/new_post" />
+
+    <item
+        android:id="@+id/friends"
+        android:icon="@drawable/added_friend"
+        android:title="@string/your_friends" />
+
+    <item
+        android:id="@+id/profile"
+        android:icon="@drawable/person"
+        android:title="@string/profile" />
+</menu>
