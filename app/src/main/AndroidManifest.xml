@@ -39,7 +39,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".FeedActivity" />
+        <activity android:name=".HomeActivity" />
     </application>
 
 </manifest>

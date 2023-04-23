@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openHome() {
-        val intent = Intent(this, FeedActivity::class.java)
+        val intent = Intent(this, HomeActivity::class.java)
         startActivity(intent)
     }
 }
