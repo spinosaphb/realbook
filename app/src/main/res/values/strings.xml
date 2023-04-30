@@ -7,6 +7,7 @@
     <string name="your_friends">Seus amigos</string>
     <string name="home">Home</string>
     <string name="search">Buscar</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="share_location">Compartilhar a localização?</string>
+    <string name="loading">Carregando...</string>
+    <string name="logout">Sair</string>
 </resources>
