@@ -26,7 +26,7 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.profile -> {
-                    // loadFragment(ProfileFragment())
+                    loadFragment(ProfileFragment())
                     true
                 }
                 R.id.new_post -> {
