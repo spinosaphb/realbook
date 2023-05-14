@@ -10,20 +10,60 @@
       "client_info": {
         "mobilesdk_app_id": "1:686523043635:android:88f279ccc5ffaaad1bf846",
         "android_client_info": {
+          "package_name": "com.example.realbook"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "686523043635-knpvi59esvbi3vsp2r205gitp1rroo0h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.realbook",
+            "certificate_hash": "a88a3ec9c4e5822cca511890a15fc48cea97365d"
+          }
+        },
+        {
+          "client_id": "686523043635-ol48r86587iep07k2qd2irg9gh73jkqe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.realbook",
+            "certificate_hash": "347cb499dba971b95f696dc0b1122b0c465a3ad2"
+          }
+        },
+        {
+          "client_id": "686523043635-6hbk5r0q3vfnsi6p6ggde77v6t5s7shk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoqZG5vlWJs6OnPoBjU5tSv0wYmA4Y8F4"
+        },
+        {
+          "current_key": "AIzaSyBpfTOgy8f7YweoQd0CZvhldDk4eAtq4l8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "686523043635-6hbk5r0q3vfnsi6p6ggde77v6t5s7shk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:686523043635:android:b5ba086f4701af9d1bf846",
+        "android_client_info": {
           "package_name": "com.realbook"
         }
       },
       "oauth_client": [
         {
-          "client_id": "686523043635-6cj3dukmf94tirprir6hslfassrbq3v7.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.realbook",
-            "certificate_hash": "347cb499dba971b95f696dc0b1122b0c465a3ad2"
-          }
-        },
-        {
-          "client_id": "686523043635-uskh18ja65otlp01apbrq3ehcq42aba7.apps.googleusercontent.com",
+          "client_id": "686523043635-mqlh09bi7ejh95cpv12dqlb795i64tm6.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.realbook",
@@ -38,6 +78,9 @@
       "api_key": [
         {
           "current_key": "AIzaSyAoqZG5vlWJs6OnPoBjU5tSv0wYmA4Y8F4"
+        },
+        {
+          "current_key": "AIzaSyBpfTOgy8f7YweoQd0CZvhldDk4eAtq4l8"
         }
       ],
       "services": {
