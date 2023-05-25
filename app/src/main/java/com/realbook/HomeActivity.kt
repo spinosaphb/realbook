@@ -1,5 +1,6 @@
 package com.realbook
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -34,7 +35,7 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.friends -> {
-                    // loadFragment(FriendsFragment())
+                    loadFragment(FriendsFragment())
                     true
                 }
                 else -> {
@@ -46,6 +47,7 @@ class HomeActivity : AppCompatActivity() {
 
         val buttonChat = findViewById<Button>(R.id.chat_btn)
         buttonChat.setOnClickListener {
+            goToChat()
         }
     }
 
@@ -54,5 +56,10 @@ class HomeActivity : AppCompatActivity() {
         transaction.replace(R.id.container,fragment)
         transaction.addToBackStack(null)
         transaction.commit()
+    }
+
+    private fun goToChat() {
+        val intent = Intent(this, ChatActivity::class.java)
+        startActivity(intent)
     }
 }

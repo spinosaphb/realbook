@@ -1,0 +1,279 @@
+package com.realbook
+
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.os.Bundle
+import android.view.Gravity
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import com.squareup.picasso.Picasso
+import org.w3c.dom.Text
+
+// TODO: Rename parameter arguments, choose names that match
+// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+private const val ARG_PARAM1 = "param1"
+private const val ARG_PARAM2 = "param2"
+
+/**
+ * A simple [Fragment] subclass.
+ * Use the [FriendsFragment.newInstance] factory method to
+ * create an instance of this fragment.
+ */
+class FriendsFragment : Fragment() {
+    // TODO: Rename and change types of parameters
+    private var param1: String? = null
+    private var param2: String? = null
+    private lateinit var layout: LinearLayout
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: DatabaseReference
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            param1 = it.getString(ARG_PARAM1)
+            param2 = it.getString(ARG_PARAM2)
+        }
+        auth = FirebaseAuth.getInstance()
+        database = FirebaseDatabase.getInstance().reference
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_friends, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        layout = view.findViewById(R.id.friends_container)
+        val currentUser = auth.currentUser ?: return
+        val userId = currentUser.uid
+
+        database
+            .child("users")
+            .child(userId)
+            .child("friends")
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val snapshot = task.result
+
+                    if (snapshot.exists()) {
+                        for (friend in snapshot.children) {
+                            val userName = friend.child("name").getValue(String::class.java)!!
+                            val userId = friend.child("id").getValue(String::class.java)!!
+                            val email = friend.child("email").getValue(String::class.java)!!
+                            val userAvatar = friend.child("avatar").getValue(String::class.java)!!
+                            val shareLocation = friend.child("shareLocation").getValue(Boolean::class.java)!!
+                            val location = friend.child("location").getValue(User.Coords::class.java)!!
+
+                            val userFriend = User(
+                                id = userId,
+                                name = userName,
+                                avatar = userAvatar,
+                                location = location,
+                                shareLocation = shareLocation,
+                                email = email,
+                                friends = null
+                            )
+
+                            updateUI(userFriend, false)
+                        }
+                    }
+                }
+            }
+
+        database
+            .child("users")
+            .child(userId)
+            .child("friendRequests")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                }
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+
+
+                    for (child in snapshot.children) {
+                        if (child == null) continue
+
+                        val userIdRequested = child.key.toString()
+
+                        database
+                            .child("users")
+                            .child(userIdRequested)
+                            .get()
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val snapshot = task.result
+
+                                    if (snapshot.exists()) {
+                                        val userName = snapshot.child("name").getValue(String::class.java)!!
+                                        val userId = snapshot.child("id").getValue(String::class.java)!!
+                                        val email = snapshot.child("email").getValue(String::class.java)!!
+                                        val userAvatar = snapshot.child("avatar").getValue(String::class.java)!!
+                                        val shareLocation = snapshot.child("shareLocation").getValue(Boolean::class.java)!!
+                                        val location = snapshot.child("location").getValue(User.Coords::class.java)!!
+
+                                        val userFriend = User(
+                                            id = userId,
+                                            name = userName,
+                                            avatar = userAvatar,
+                                            location = location,
+                                            shareLocation = shareLocation,
+                                            email = email,
+                                            friends = null
+                                        )
+                                        val requestFriendsTextParams = LinearLayout.LayoutParams(
+                                            LinearLayout.LayoutParams.MATCH_PARENT,
+                                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        )
+                                        updateUI(userFriend, true)
+                                    }
+                                }
+                            }
+
+                    }
+                }
+            })
+    }
+
+    private fun updateUI(friend: User, isFriendRequest: Boolean) {
+        val circleImageView = de.hdodenhof.circleimageview.CircleImageView(context)
+
+        Picasso
+            .get()
+            .load(friend.avatar)
+            .placeholder(R.drawable.post_image_default)
+            .into(circleImageView)
+
+        val layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+        )
+
+        layoutParams.setMargins(48,48,48,16)
+
+        val boxLayout = LinearLayout(context)
+        val contentLayout = LinearLayout(context)
+        contentLayout.orientation = LinearLayout.VERTICAL
+        contentLayout.setPadding(48, 0,0,0)
+
+        val nameTextView = TextView(context)
+        nameTextView.text = friend?.name
+        nameTextView.textSize = 16.0F
+
+
+        boxLayout.elevation = 2f
+        boxLayout.background = ContextCompat.getDrawable(requireContext(), R.drawable.header_drawable)
+
+        contentLayout.addView(nameTextView)
+        boxLayout.layoutParams = layoutParams
+        boxLayout.setPadding(48,48,48,48)
+
+        boxLayout.addView(circleImageView)
+        boxLayout.addView(contentLayout)
+
+        if (isFriendRequest) {
+            val buttonsLayout = actionButtons(friend, boxLayout)
+            boxLayout.addView(buttonsLayout)
+        }
+
+        boxLayout.setOnClickListener{
+            val intent = Intent(context, ChatMessagesActivity::class.java)
+            intent.putExtra("user_id", friend.id)
+            startActivity(intent)
+        }
+
+
+        layout.gravity = Gravity.CENTER_VERTICAL
+        layout.addView(boxLayout)
+
+
+    }
+
+    private fun actionButtons(friendRequest: User, layout: LinearLayout): LinearLayout {
+        val layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+        )
+
+        layoutParams.gravity = Gravity.END
+        val buttonsLayout = LinearLayout(requireContext())
+
+        val acceptBtn = Button(requireContext())
+        acceptBtn.setOnClickListener {
+            onAcceptFriendRequest(friendRequest, layout)
+        }
+        buttonsLayout.layoutParams = layoutParams
+        buttonsLayout.addView(customButton(acceptBtn, R.drawable.accept_friend))
+
+        return buttonsLayout;
+    }
+
+    private fun onAcceptFriendRequest(friend: User, layout: LinearLayout) {
+        val currentUser = auth.currentUser ?: return
+
+        val usersRef = database
+            .child("users")
+            .child(currentUser.uid)
+
+        usersRef
+            .child("friendRequests")
+            .child(friend.id)
+            .setValue(null)
+
+        usersRef.child("friends").child(friend.id).setValue(friend)
+        this.layout.removeView(layout)
+        updateUI(friend, false)
+
+    }
+
+    private fun customButton(button: Button, drawable: Int): Button {
+        button.text = "Adicionar"
+        button.textSize = 11f
+        button.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            null,
+            null,
+            null,
+            ContextCompat.getDrawable(requireContext(), drawable),
+        )
+
+        button.setBackgroundColor(Color.TRANSPARENT)
+        button.width = LayoutParams.WRAP_CONTENT
+        return button
+    }
+
+
+    companion object {
+        /**
+         * Use this factory method to create a new instance of
+         * this fragment using the provided parameters.
+         *
+         * @param param1 Parameter 1.
+         * @param param2 Parameter 2.
+         * @return A new instance of fragment FriendsFragment.
+         */
+        // TODO: Rename and change types and number of parameters
+        @JvmStatic
+        fun newInstance(param1: String, param2: String) =
+            FriendsFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_PARAM1, param1)
+                    putString(ARG_PARAM2, param2)
+                }
+            }
+    }
+}
