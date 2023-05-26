@@ -2,7 +2,10 @@ package com.realbook
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
+import android.media.Image
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -12,77 +15,89 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.widget.LinearLayoutCompat.OrientationMode
+import androidx.appcompat.widget.LinearLayoutCompat.VERTICAL
 import androidx.core.content.ContextCompat
-import com.squareup.picasso.Picasso
+import androidx.core.view.setMargins
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.*
 import com.realbook.models.PostModel
 import com.realbook.models.UserModel
+import com.squareup.picasso.Picasso
+import java.util.*
+import javax.sql.DataSource
 
 class FeedFragment : Fragment() {
-
+    private lateinit var firebaseDatabase: DatabaseReference
+    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var layout: LinearLayout
+
+    private var userLikes = mutableListOf<UserModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let { }
+        arguments?.let {}
+
+        firebaseDatabase = FirebaseDatabase.getInstance().reference
+        firebaseAuth = FirebaseAuth.getInstance()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_post_feed, container, false)
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_feed, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         layout = view.findViewById(R.id.feed)
+        val currentUser = firebaseAuth.currentUser ?: return
+        firebaseDatabase.child("posts")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                }
 
-        var friends = emptyArray<UserModel>();
-        var user = UserModel(
-            name = "Vinicius",
-            email = "",
-            avatar = "",
-            shareLocation = false,
-            location = UserModel.Coords(10.0, 100.0),
-            friends,
-            id = null
-        )
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    layout.removeAllViews()
 
-        var post1 = PostModel(
-            id = "1",
-            content = "Conteúdo 1",
-            imageUrl = "https://api.deepai.org/job-view-file/907b9cce-0ab6-4884-b38f-554c8bfcb950/outputs/output.jpg",
-            createdByUser = user,
-            likes = mutableListOf<UserModel>()
-        )
+                    for (child in snapshot.children) {
+                        val content = child.child("content").getValue(String::class.java)
+                        val createdByUser = generateUser(child.child("createdByUser"))
+                        val postId = child.child("id").getValue(String::class.java)
+                        val imageUrl = child.child("imageUrl").getValue(String::class.java)
 
-        var post2 = PostModel (
-            id = "2",
-            content = "Conteúdo 2",
-            imageUrl = "https://api.deepai.org/job-view-file/81389afb-d306-448f-9bb9-527b614d38a8/outputs/output.jpg",
-            createdByUser = user,
-            likes = mutableListOf<UserModel>()
-        )
+                        val likes = child.child("likes").children
+                        var userHasLikedPost = false
+                        for (childLike in likes) {
+                            val like = generateUser(childLike)
+                            if (like.id == currentUser.uid)
+                                userHasLikedPost = true
+                        }
+                        val postC = PostModel(
+                            content = content,
+                            createdByUser = createdByUser,
+                            id = postId,
+                            imageUrl = imageUrl,
+                            likes = null
+                        )
 
-        updateUI(user, post1, true)
-        updateUI(user, post2, false)
+                        updateUI(postC, userHasLikedPost)
+                        userLikes.forEach { like -> userLikes.remove(like) }
+                    }
+                }
+            })
+
     }
 
-    private fun createButton(drawable: Int, color: Int): Button {
-        val button = Button(context)
-        button
-            .setCompoundDrawablesRelativeWithIntrinsicBounds(
-                null,
-                null,
-                ContextCompat.getDrawable(requireContext(), drawable),
-                null
-            )
-        button.setBackgroundColor(color)
-        return button
-    }
-
-    private fun updateUI(currentUser: UserModel?, post: PostModel?, isPostLiked: Boolean) {
-        if(currentUser == null || post == null) return
+    private fun updateUI(post: PostModel?, isPostLiked: Boolean) {
+        val currentUser = firebaseAuth.currentUser ?: return
 
         val boxPostLayout = LinearLayout(context)
         boxPostLayout.orientation = LinearLayout.VERTICAL
@@ -109,13 +124,7 @@ class FeedFragment : Fragment() {
         headerLayout.addView(createdByTextView)
         headerLayout.setPadding(32, 32,32,32)
 
-        val postUser = post.createdByUser
-
-
-
-
-        // Se o usuário logado não for quem criou o post
-        if(currentUser?.id != postUser?.id) {
+        if (post !== null && currentUser.uid != post.createdByUser?.id) {
             val itemsHeaderParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -132,9 +141,9 @@ class FeedFragment : Fragment() {
 
             val buttonLike = createButton(buttonLikeDrawable, Color.TRANSPARENT)
 
-            // buttonLike.setOnClickListener {
-            //
-            // }
+            buttonLike.setOnClickListener {
+                handleLikePost(currentUser, post)
+            }
 
             actionButtonsLayout.layoutParams = itemsHeaderParams
 
@@ -142,28 +151,40 @@ class FeedFragment : Fragment() {
 
             var buttonAddFriendDrawable = R.drawable.add_friend
 
-            var isFriend = currentUser?.friends?.find { it.id == postUser?.id } != null
+            firebaseDatabase
+                .child("users")
+                .child(currentUser.uid)
+                .child("friends")
+                .child(post.createdByUser!!.id)
+                .get()
+                .addOnCompleteListener { task ->
+                    if(task.isSuccessful) {
+                        val snapshot = task.result
 
-            if(isFriend) {
-                buttonAddFriendDrawable = R.drawable.added_friend
-            }
+                        if (snapshot.exists()) {
+                            buttonAddFriendDrawable = R.drawable.added_friend
+                        }
 
-            val buttonAddFriend = createButton(buttonAddFriendDrawable, Color.TRANSPARENT)
+                        val buttonAddFriend = createButton(buttonAddFriendDrawable, Color.TRANSPARENT)
 
-            // buttonAddFriend.setOnClickListener {
-            //
-            // }
-            buttonAddFriend.layoutParams = itemsHeaderParams
-            actionButtonsLayout.addView(buttonAddFriend)
+                        buttonAddFriend.setOnClickListener {
+                            handleAddFriend(currentUser, post, buttonAddFriend)
+                        }
+                        buttonAddFriend.layoutParams = itemsHeaderParams
+                        actionButtonsLayout.addView(buttonAddFriend)
+
+                    }
+                }
 
             headerLayout.addView(actionButtonsLayout)
         }
-        else {
+
+        else if (post != null && currentUser.uid == post.createdByUser?.id) {
             val button = createButton(R.drawable.deny_friend, Color.TRANSPARENT)
 
-            // button.setOnClickListener {
-            //
-            // }
+            button.setOnClickListener {
+                handleDeletePost(post)
+            }
 
             val buttonParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -200,6 +221,144 @@ class FeedFragment : Fragment() {
         boxPostLayout.addView(contentView)
 
         layout.addView(boxPostLayout)
+    }
+
+    private fun createButton(drawable: Int, color: Int): Button {
+        val button = Button(context)
+        button
+            .setCompoundDrawablesRelativeWithIntrinsicBounds(
+                null,
+                null,
+                ContextCompat.getDrawable(requireContext(), drawable),
+                null
+            )
+        button.setBackgroundColor(color)
+        return button
+    }
+    private fun handleLikePost(currentUser: FirebaseUser, post: PostModel?) {
+        if (post == null) return
+
+        firebaseDatabase
+            .child("users")
+            .child(currentUser.uid)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val snapshot = task.result
+                    val user = generateUser(snapshot)
+
+                    val postsRef = firebaseDatabase
+                        .child("posts")
+                        .child(post.id!!)
+                        .child("likes")
+                        .child(currentUser.uid)
+
+
+                    postsRef.get()
+                        .addOnCompleteListener { _task ->
+                            if (_task.isSuccessful) {
+                                val snapshot2 = _task.result
+
+                                if (!snapshot2.exists())
+                                    postsRef.setValue(user)
+                            }
+                        }
+                }
+            }
+
+
+    }
+
+    private fun handleAddFriend(currentUser: FirebaseUser, post: PostModel?, button: Button) {
+        if (post == null) return
+
+        val createdByUserId = post.createdByUser!!.id
+
+        val friendsIdRef = firebaseDatabase
+            .child("users")
+            .child(currentUser.uid)
+            .child("friends")
+            .child(createdByUserId)
+
+        firebaseDatabase
+            .child("users")
+            .child((createdByUserId))
+            .child("friendRequests")
+            .child(currentUser.uid)
+            .setValue(currentUser.uid)
+
+        friendsIdRef
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val snapshot = task.result
+
+                    if (!snapshot.exists()) {
+                        friendsIdRef
+                            .setValue(post.createdByUser)
+
+                        button.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                            null,
+                            null,
+                            ContextCompat.getDrawable(requireContext(), R.drawable.added_friend),
+                            null
+                        )
+
+                        toastMessage("Amigo adicionado com sucesso!!")
+                    } else {
+                        toastMessage("Vocês já são amigos!!")
+                    }
+                }
+            }
+
+    }
+
+    private fun handleDeletePost(post: PostModel) {
+
+        val postsRef = firebaseDatabase
+            .child("posts")
+
+        postsRef
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (child in snapshot.children) {
+                        val id = child.key.toString()
+                        if (post.id == id) {
+                            postsRef
+                                .child(id)
+                                .setValue(null)
+
+                            toastMessage("Post deletado com sucesso")
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    toastMessage("Erro ao deletar post!")
+                }
+            })
+    }
+    private fun toastMessage(message: String) {
+        return Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun generateUser(snapshot: DataSnapshot): UserModel {
+        val userName = snapshot.child("name").getValue(String::class.java)!!
+        val userId = snapshot.child("id").getValue(String::class.java)!!
+        val email = snapshot.child("email").getValue(String::class.java)!!
+        val userAvatar = snapshot.child("avatar").getValue(String::class.java)!!
+        val shareLocation = snapshot.child("shareLocation").getValue(Boolean::class.java)!!
+        val location = snapshot.child("location").getValue(UserModel.Coords::class.java)!!
+
+        return UserModel(
+            id = userId,
+            name = userName,
+            avatar = userAvatar,
+            location = location,
+            shareLocation = shareLocation,
+            email = email,
+            friends = null
+        )
     }
 
     companion object {
