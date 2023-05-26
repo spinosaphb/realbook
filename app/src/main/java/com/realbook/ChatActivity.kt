@@ -2,27 +2,22 @@ package com.realbook
 
 import android.content.Intent
 import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable.Orientation
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.view.marginBottom
-import androidx.core.view.setMargins
-import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.realbook.models.MessageModel
+import com.realbook.models.UserModel
 import java.text.SimpleDateFormat
 import java.util.Date
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
-    var userChatting: User? = null
+    var userChatting: UserModel? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
@@ -48,23 +43,23 @@ class ChatActivity : AppCompatActivity() {
                         val key = child.key.toString()
 
                         if (key.endsWith(userId)) {
-                            val chattingWithUser = child.child("user1").getValue(User::class.java)
+                            val chattingWithUser = child.child("user1").getValue(UserModel::class.java)
                             userChatting = chattingWithUser
                             val score = child.child("score").getValue(Int::class.java)
                             val lastMessageChild = child.child("messages").children.last()
                             if(lastMessageChild != null) {
-                                val lastMessage = lastMessageChild.getValue(Message::class.java)
+                                val lastMessage = lastMessageChild.getValue(MessageModel::class.java)
                                 updateUI(chattingWithUser, lastMessage, score)
                             }
 
                         } else if (key.contains(userId)) {
-                            val chattingWithUser = child.child("user2").getValue(User::class.java)
+                            val chattingWithUser = child.child("user2").getValue(UserModel::class.java)
                             userChatting = chattingWithUser
                             val score = child.child("score").getValue(Int::class.java)
                             val lastMessageChild = child.child("messages").children.last()
 
                             if(lastMessageChild != null) {
-                                val lastMessage = lastMessageChild.getValue(Message::class.java)
+                                val lastMessage = lastMessageChild.getValue(MessageModel::class.java)
                                 updateUI(chattingWithUser, lastMessage, score)
                             }
                         }
@@ -73,7 +68,7 @@ class ChatActivity : AppCompatActivity() {
             })
     }
 
-    private fun updateUI(chattingWithUser: User?, lastMessage: Message?, score: Int?) {
+    private fun updateUI(chattingWithUser: UserModel?, lastMessage: MessageModel?, score: Int?) {
         val layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -133,7 +128,7 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    private fun openChat(chattingWithUser: User?) {
+    private fun openChat(chattingWithUser: UserModel?) {
         val intent = Intent(this, ChatMessagesActivity::class.java)
         intent.putExtra("user_id", chattingWithUser?.id)
         startActivity(intent)

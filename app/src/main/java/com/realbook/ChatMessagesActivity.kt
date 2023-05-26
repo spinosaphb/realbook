@@ -18,12 +18,15 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.realbook.models.ChatModel
+import com.realbook.models.MessageModel
+import com.realbook.models.UserModel
 
 class ChatMessagesActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
 
-    private var messageList = mutableListOf<Message>()
+    private var messageList = mutableListOf<MessageModel>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,7 +81,7 @@ class ChatMessagesActivity : AppCompatActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val messages = snapshot.child("messages").children
                     for (child in messages) {
-                        val message = child.getValue(Message::class.java)
+                        val message = child.getValue(MessageModel::class.java)
                         messageList.add(message!!)
 
                     }
@@ -106,7 +109,7 @@ class ChatMessagesActivity : AppCompatActivity() {
                 val newMessageEditText = findViewById<EditText>(R.id.new_message_edit_text)
                 val messageContent = newMessageEditText.text.toString()
 
-                val message = Message(
+                val message = MessageModel(
                     messageContent,
                     from,
                     to,
@@ -124,7 +127,7 @@ class ChatMessagesActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         val snapshot = task.result
                         if (snapshot.exists()) {
-                            val chat = Chat(
+                            val chat = ChatModel(
                                 messages = null,
                                 score = messageList.size,
                                 lastInteraction = null,
@@ -144,7 +147,7 @@ class ChatMessagesActivity : AppCompatActivity() {
                                 if (task.isSuccessful) {
                                     val snapshot = task.result
                                     if (snapshot.exists()) {
-                                        val chat = Chat(
+                                        val chat = ChatModel(
                                             messages = null,
                                             score = messageList.size,
                                             lastInteraction = null,
@@ -160,7 +163,7 @@ class ChatMessagesActivity : AppCompatActivity() {
                                             .setValue(messageList)
 
                                     } else {
-                                        val chat = Chat(
+                                        val chat = ChatModel(
                                             messages = null,
                                             score = messageList.size,
                                             lastInteraction = null,
@@ -193,7 +196,7 @@ class ChatMessagesActivity : AppCompatActivity() {
 
         sendNotification()
     }
-    private fun updateUI(layout: LinearLayout, from: User, to: User) {
+    private fun updateUI(layout: LinearLayout, from: UserModel, to: UserModel) {
         val scrollView = findViewById<ScrollView>(R.id.messages_view_scrollview)
 
         val chattingWith = findViewById<TextView>(R.id.chatting_with_text_view)
@@ -218,7 +221,7 @@ class ChatMessagesActivity : AppCompatActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val messages = snapshot.child("messages").children.sortedBy { it.child("sentAt").value as Long }
                     for (child in messages) {
-                        val message = child.getValue(Message::class.java) ?: return
+                        val message = child.getValue(MessageModel::class.java) ?: return
                         val textView = TextView(baseContext)
                         textView.text = message?.content
 
@@ -254,15 +257,15 @@ class ChatMessagesActivity : AppCompatActivity() {
         }
     }
 
-    private fun generateUser(snapshot: DataSnapshot): User {
+    private fun generateUser(snapshot: DataSnapshot): UserModel {
         val userName = snapshot.child("name").getValue(String::class.java)!!
         val userId = snapshot.child("id").getValue(String::class.java)!!
         val email = snapshot.child("email").getValue(String::class.java)!!
         val userAvatar = snapshot.child("avatar").getValue(String::class.java)!!
         val shareLocation = snapshot.child("shareLocation").getValue(Boolean::class.java)!!
-        val location = snapshot.child("location").getValue(User.Coords::class.java)!!
+        val location = snapshot.child("location").getValue(UserModel.Coords::class.java)!!
 
-        return User(
+        return UserModel(
             id = userId,
             name = userName,
             avatar = userAvatar,

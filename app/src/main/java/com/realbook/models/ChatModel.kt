@@ -1,20 +1,20 @@
-package com.realbook
+package com.realbook.models
 
 import java.util.Date
 import java.util.UUID
 
-class Chat {
+class ChatModel {
     var id: String = ""
-    var messages: MutableList<Message>? = null
+    var messages: MutableList<MessageModel>? = null
     var score: Number = 0
     var lastInteraction: Date? = null
 
-    var user1: User? = null
-    var user2: User? = null
+    var user1: UserModel? = null
+    var user2: UserModel? = null
 
     constructor() {}
 
-    constructor(messages: MutableList<Message>?, score: Number, lastInteraction: Date?, id: String?, user1: User?, user2: User?) {
+    constructor(messages: MutableList<MessageModel>?, score: Number, lastInteraction: Date?, id: String?, user1: UserModel?, user2: UserModel?) {
         this.messages = messages
         this.score = score
         this.lastInteraction = lastInteraction
@@ -25,7 +25,7 @@ class Chat {
     }
 
     override fun toString(): String {
-        return "Chat(id='$id', messages=$messages, score=$score, lastInteraction=$lastInteraction)"
+        return "ChatModel(id='$id', messages=$messages, score=$score, lastInteraction=$lastInteraction)"
     }
 
 

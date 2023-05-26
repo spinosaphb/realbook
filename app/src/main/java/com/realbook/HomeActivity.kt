@@ -23,7 +23,7 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.search -> {
-                    // loadFragment(SearchFragment())
+                    loadFragment(SearchFragment())
                     true
                 }
                 R.id.profile -> {

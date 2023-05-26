@@ -1,18 +1,18 @@
-package com.realbook
+package com.realbook.models
 
 import java.util.Date
 import java.util.UUID
 
-class Message {
+class MessageModel {
     var id: String = ""
     var content: String = ""
-    var from: User = User()
-    var to: User = User()
+    var from: UserModel = UserModel()
+    var to: UserModel = UserModel()
     var sentAt: Long? = null
 
     constructor() {}
 
-    constructor(content: String, from: User, to: User, sentAt: Long?, id: String?) {
+    constructor(content: String, from: UserModel, to: UserModel, sentAt: Long?, id: String?) {
         this.content = content
         this.from = from
         this.to = to

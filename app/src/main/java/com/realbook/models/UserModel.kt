@@ -11,6 +11,8 @@ class UserModel {
     var location: Coords? = null
     var friends: Array<UserModel>? = null
 
+    constructor() {}
+
     constructor(name: String, email: String, avatar: String, shareLocation: Boolean, location: Coords, friends: Array<UserModel>?, id: String?) {
         if (id != null) this.id = id
         else this.id = UUID.randomUUID().toString()
