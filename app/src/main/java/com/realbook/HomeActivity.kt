@@ -31,7 +31,7 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.new_post -> {
-                    // loadFragment(CreatePostFragment())
+                    loadFragment(CreatePostFragment())
                     true
                 }
                 R.id.friends -> {

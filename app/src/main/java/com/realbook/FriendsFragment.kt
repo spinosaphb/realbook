@@ -244,7 +244,7 @@ class FriendsFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance() =
             FriendsFragment().apply {
                 arguments = Bundle().apply {}
             }
