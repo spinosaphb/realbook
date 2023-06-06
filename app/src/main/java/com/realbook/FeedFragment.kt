@@ -261,6 +261,8 @@ class FeedFragment : Fragment() {
 
                                 if (!snapshot2.exists())
                                     postsRef.setValue(user)
+                                else
+                                    postsRef.removeValue()
                             }
                         }
                 }
